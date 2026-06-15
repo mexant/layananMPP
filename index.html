@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dropdown Dinamis Bertingkat</title>
+    <style>
+        /* --- RESET & BASE STYLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        p.subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* --- FORM STYLES --- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+            background-color: #fff;
+            color: #333;
+            outline: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* --- ANIMASI & DISPLAY --- */
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- AREA TAMPIL DATA --- */
+        .data-box {
+            margin-top: 24px;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .data-box h3 {
+            font-size: 16px;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .data-box p {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Layanan MPP</h2>
+    <p class="subtitle">Pilih Dinas Terkait untuk melihat detail informasi Jam Layanan.</p>
+
+    <div class="form-group">
+        <label for="mainDropdown">Pilih Dinas</label>
+        <select id="mainDropdown" onchange="handleMainDropdown()">
+            <option value="" selected disabled>-- Pilih Dinas --</option>
+            <option value="dinsos">Dinas Sosial</option>
+            <option value="kominfo">Dinas Komunikasi dan Informatika</option>
+            <option value="dinkes">Dinas Kesehatan</option>
+            <option value="pertaru">Dinas Pertanahan dan Tata Ruang</option>
+            <option value="dpupkp">DPUPKP</option>
+            <option value="perindag">Dinas Perindustrian dan Perdagangan</option>
+        </select>
+    </div>
+
+    <div id="subDropdownContainer" class="form-group hidden">
+        <label for="subDropdown">Pilihan Layanan</label>
+        <select id="subDropdown" onchange="handleSubDropdown()">
+            </select>
+    </div>
+
+    <div id="dataDisplay" class="data-box hidden">
+        <h3 id="dataTitle">Judul Data</h3>
+        <p id="dataContent">Isi informasi akan muncul di sini secara dinamis.</p>
+    </div>
+</div>
+
+<script>
+    // Data untuk dinas yang langsung menampilkan data
+    const databaseUtama = {
+        dinsos: {
+            judul: "Layanan konsultasi, informasi dan pengecekan data kemiskinan",
+            deskripsi: "Kamis, Jam : 08.00 – 15.00 WIB"
+        },
+        kominfo: {
+            judul: "Layanan konsultasi, informasi dan rekomendasi pemasangan Fiber Optik dan Menara telekomunikasi seluler",
+            deskripsi: "Selasa, Jam : 08.00 – 12.00 WIB"
+        },
+        dinkes: {
+            judul: "Layanan kepesertaan BPJS, Layanan konsultasi Perizinan Nakes dan Fasyankes, Layanan PIRT dan Laik Sehat Usaha",
+            deskripsi: "Senin – Kamis : 08.00-14.00 WIB, Jum’at : 08.00 – 14.00 WIB"
+        },
+        perindag: {
+            judul: "Layanan konsultasi dan informasi SIINAS dan pendirian toko modern, gudang dan minuman beralkohol",
+            deskripsi: "Jum’at : 08.00 – 11.30 WIB"
+        }
+    };
+
+    // Opsi pilihan dropdown kedua berdasarkan dinas terpilih
+    const opsiSubDropdown = {
+        pertaru: [
+            { value: "pertaru1", text: "Layanan konsultasi dan informasi tata ruang" },
+            { value: "pertaru2", text: "Layanan konsultasi pemanfaatan Tanah kalurahan dan tanah Kasultanan" },
+            { value: "pertaru3", text: "Layanan konsultasi KKPR berusaha dan non berusaha" }
+        ],
+        dpupkp: [
+            { value: "dpupkp1", text: "Layanan konsultasi dan informasi jasa konstruksi" },
+            { value: "dpupkp2", text: "Layanan pendampingan PBG/SLF simbg" },
+            { value: "dpupkp3", text: "Layanan rekomendasi izin penutupan saluran irigasi, rekomendasi izin pemindahan saluran irigasi" },
+            { value: "dpupkp4", text: "Layanan rekomendasi izin penutupan saluran drainase, rekomendasi izin pemindahan saluran drainase" },
+            { value: "dpupkp5", text: "Layanan rekomendasi izin pemanfaatan bagian-bagian jalan rumija untuk media iklan, fiber optic dan in gang"}
+
+        ]
+    };
+
+    // Gabungkan seluruh database detail sub-layanan ke dalam SATU objek terpadu
+    const databaseSub = {
+        pertaru1: {
+            judul: "Layanan konsultasi dan informasi tata ruang",
+            deskripsi: "Senin dan Rabu, Jam 08.00 - 12.00 WIB"
+        },
+        pertaru2: {
+            judul: "Layanan konsultasi pemanfaatan Tanah kalurahan dan tanah Kasultanan",
+            deskripsi: "Selasa dan Kamis, Jam 08.00 - 12.00 WIB"
+        },
+        pertaru3: {
+            judul: "Layanan konsultasi KKPR berusaha dan non berusaha",
+            deskripsi: "Senin dan Rabu, Jam 08.00 - 12.00 WIB"
+        },
+        dpupkp1: {
+            judul: "Layanan konsultasi dan informasi jasa konstruksi",
+            deskripsi: "Senin - Jumat, Jam 08.00 - 12.00 WIB"
+        },
+        dpupkp2: {
+            judul: "Layanan pendampingan PBG/SLF simbg",
+            deskripsi: "Senin - Jumat, Jam 08.00 - 12.00 WIB"
+        },
+        dpupkp3: {
+            judul: "Layanan rekomendasi izin penutupan saluran irigasi, rekomendasi izin pemindahan saluran irigasi",
+            deskripsi: "Selasa, Jam 08.00 - 12.00 WIB"
+        },
+        dpupkp4: {
+            judul: "Layanan rekomendasi izin penutupan saluran drainase, rekomendasi izin pemindahan saluran drainase",
+            deskripsi: "Kamis, Jam 08.00 - 12.00 WIB"
+        },
+        dpupkp5: {
+            judul: "Layanan rekomendasi izin pemanfaatan bagian-bagian jalan rumija untuk media iklan, fiber optic dan in gang",
+            deskripsi: "Rabu, Jam 08.00 - 12.00 WIB"
+        },
+    };
+
+    const mainSelect = document.getElementById('mainDropdown');
+    const subContainer = document.getElementById('subDropdownContainer');
+    const subSelect = document.getElementById('subDropdown');
+    const displayBox = document.getElementById('dataDisplay');
+    const dataTitle = document.getElementById('dataTitle');
+    const dataContent = document.getElementById('dataContent');
+
+    function handleMainDropdown() {
+        const value = mainSelect.value;
+
+        // Reset tampilan setiap kali dropdown utama berubah
+        subContainer.classList.add('hidden');
+        subContainer.classList.remove('fade-in');
+        displayBox.classList.add('hidden');
+        subSelect.innerHTML = ""; // Bersihkan opsi lama
+
+        // Cek apakah dinas yang dipilih membutuhkan sub-dropdown (pertaru atau dpupkp)
+        if (value === "pertaru" || value === "dpupkp") {
+            
+            // 1. Buat placeholder default untuk sub-dropdown
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.text = "-- Pilih Layanan --";
+            defaultOpt.disabled = true;
+            defaultOpt.selected = true;
+            subSelect.appendChild(defaultOpt);
+
+            // 2. Isi data opsi baru berdasarkan dinas terpilih
+            opsiSubDropdown[value].forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.value;
+                opt.text = item.text;
+                subSelect.appendChild(opt);
+            });
+
+            // 3. Tampilkan sub-dropdown
+            subContainer.classList.remove('hidden');
+            subContainer.classList.add('fade-in');
+
+        } else if (databaseUtama[value]) {
+            // Jika memilih Dinsos, Kominfo, atau Dinkes -> Langsung tampilkan data
+            tampilkanData(databaseUtama[value].judul, databaseUtama[value].deskripsi);
+        }
+    }
+
+    function handleSubDropdown() {
+        const value = subSelect.value;
+        if (databaseSub[value]) {
+            tampilkanData(databaseSub[value].judul, databaseSub[value].deskripsi);
+        }
+    }
+
+    function tampilkanData(judul, deskripsi) {
+        // Memperbaiki typo bug bawaan 'Greenwich ='
+        dataTitle.innerText = judul;
+        dataContent.innerText = deskripsi;
+        
+        displayBox.classList.remove('hidden');
+        displayBox.classList.add('fade-in');
+    }
+</script>
+
+</body>
+</html>
